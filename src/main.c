@@ -231,7 +231,7 @@ int main(int argc, char *argv[])
 	//make window
 	gtk_init(&argc, &argv);
 	GtkWidget *window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-	gtk_window_set_title(GTK_WINDOW(window), "Linux Cuts Dev");
+	gtk_window_set_title(GTK_WINDOW(window), "Linux Cuts");
 	g_signal_connect(window, "destroy", G_CALLBACK(destroy), NULL);
 
 	k= gtk_fixed_new();
