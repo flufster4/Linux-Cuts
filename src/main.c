@@ -71,6 +71,7 @@ void makebutton_clicked(GtkWidget *widget,gpointer data) {
 		g_print("Invalid path!\n");
 	}
 	else {
+
 		//check if path is not null
 		if (strlen(gtk_entry_get_text(GTK_ENTRY(name))) == 0) return;
 		int namelen = strlen(gtk_entry_get_text(GTK_ENTRY(name)));
@@ -97,7 +98,12 @@ void makebutton_clicked(GtkWidget *widget,gpointer data) {
 		if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(soundtype)) == 1) type = 1;
 		if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(texttype)) == 1) type = 2;
 
-		FILE *shortcut = fopen(gtk_entry_get_text(GTK_ENTRY(name)),"w");
+		char shortcutpath[5100] = "";
+		strcpy(shortcutpath, gtk_entry_get_text(GTK_ENTRY(name)));
+		strcat(shortcutpath, ".lnk");
+
+		FILE *shortcut = fopen(shortcutpath,"w");
+
 		fprintf(shortcut, "[shortcut]\npath=%s\ntype=%d",gtk_entry_get_text(GTK_ENTRY(path)),type);
 		fclose(shortcut);
 
@@ -117,55 +123,47 @@ void makebutton_clicked(GtkWidget *widget,gpointer data) {
  }
 
 void selectname_clicked(GtkWidget *widget,gpointer data) {
-	GtkWidget       *fc_dialog;
-	GtkFileChooser  *fc;
-	char            *filename;
+	GtkWidget *dialog;
+	GtkFileChooser *chooser;
+	GtkFileChooserAction action = GTK_FILE_CHOOSER_ACTION_SAVE;
+	gint res;
 
-	fc_dialog = gtk_file_chooser_dialog_new("Shortcut Name", NULL, GTK_FILE_CHOOSER_ACTION_SAVE, 	"Cancel", GTK_RESPONSE_CANCEL, "Save", GTK_RESPONSE_ACCEPT, NULL);
+	//make dialog
+	dialog = gtk_file_chooser_dialog_new ("Shortcut Name",
+                                      NULL,
+                                      action,
+                                      "Cancel",
+                                      GTK_RESPONSE_CANCEL,
+                                      "Save",
+                                      GTK_RESPONSE_ACCEPT,
+                                      NULL);
+	chooser = GTK_FILE_CHOOSER (dialog);
+	gtk_file_chooser_set_do_overwrite_confirmation (chooser, FALSE);
+	res = gtk_dialog_run (GTK_DIALOG (dialog));
 
-	gtk_widget_show(fc_dialog);
+	//check if user pressed "Save"
+	if (res == GTK_RESPONSE_ACCEPT)
+  	{
+    	char *filename;
+    	filename = gtk_file_chooser_get_filename (chooser);
 
-	if (gtk_dialog_run(GTK_DIALOG(fc_dialog)) == GTK_RESPONSE_ACCEPT){
-     		fc = GTK_FILE_CHOOSER(fc_dialog);
-     		filename = gtk_file_chooser_get_filename(fc);
-			char suffix[4] = ".lnk"; 
+		gtk_entry_set_text(GTK_ENTRY(name), filename);
 
-			strcat(filename, suffix);
-     		gtk_entry_set_text(GTK_ENTRY(name),filename);
+		g_free(filename);
+  	}
 
-     		g_free (filename);
-     		gtk_widget_destroy(fc_dialog);}
-	else {
-     		gtk_widget_destroy(fc_dialog);
-    }
+	gtk_widget_destroy (dialog);
 }
 
 void quitbutton_clicked(GtkWidget *widget,gpointer data) {
 	gtk_main_quit();
 }
 
-/*
-char * ini_getvalue(FILE * file, int rnewline, char * key, char * value) {
-	char line[5100] = "";
-
-	//loops tru file
-	while (fgets(line, 5100, file) != NULL) {
-		char substr[5100] = "";
-
-		if (strcmp(strncpy(substr, &line[0], strlen(key) + 1),key) == 0) {
-			strncpy(value, &line[strlen(substr)], strlen(line));
-					
-					if (rnewline == 1) value[strcspn(value, "\n")] = 0;
-					return value;
-
-				}
-			}
-}
-*/
 
 int main(int argc, char *argv[])
 {
-	
+	gchar *title = "Linux Cuts";
+
 	if (argc == 2) {
 		if (fopen(argv[1], "r")) {
 			FILE *file = fopen(argv[1], "r");
@@ -227,11 +225,59 @@ int main(int argc, char *argv[])
 		}
 		return EXIT_FAILURE;
 	}
+
+
+	//edit shortcut
+	if (argc == 3) {
+
+		if (fopen(argv[1], "r")) {
+
+			title = "Edit Shortcut";
+
+			//open shortcut file and create vars
+			FILE *file = fopen(argv[1], "r");
+			char line[5100] = "";
+			char value[5100] = "";
+			char path[5100] = "";
+			char type[2] = "";
+
+			//loop thr file
+			while (fgets(line, 5100, file) != NULL) {
+
+				//get path
+				char substr[5100] = "";
+				if (strcmp(strncpy(substr, &line[0], 5),"path=") == 0) {
+					strncpy(path, &line[strlen(substr)], strlen(line));
+					
+					path[strcspn(path, "\n")] = 0;
+
+				}
+
+				//get type
+				if (strcmp(strncpy(substr, &line[0], 5),"type=") == 0) {
+					strncpy(type, &line[strlen(substr)], strlen(line));
+					
+					type[strcspn(type, "\n")] = 0;
+
+				}
+				
+			}
+
+			printf("path: %s\ntype: %s", path, type);
+
+			gtk_entry_set_text(GTK_ENTRY(path), path);
+
+
+			//close file
+			fclose(file);
+
+		}
+	}
 	
 	//make window
 	gtk_init(&argc, &argv);
 	GtkWidget *window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-	gtk_window_set_title(GTK_WINDOW(window), "Linux Cuts");
+	gtk_window_set_title(GTK_WINDOW(window), title);
 	g_signal_connect(window, "destroy", G_CALLBACK(destroy), NULL);
 
 	k= gtk_fixed_new();
@@ -275,8 +321,8 @@ int main(int argc, char *argv[])
     	additem(pathlabel, 25, 80);
     	additem(path, 85, 75);
     	additem(openfile, 275, 75);
-    	additem(cancel, 15, 190);
-    	additem(make, 200, 190);
+    	additem(cancel, 15, 210);
+    	additem(make, 200, 210);
 		additem(savename, 275, 25);
 		additem(typelabel,25,125);
 		additem(imagetype, 25,155);
@@ -284,7 +330,7 @@ int main(int argc, char *argv[])
 		additem(texttype, 215, 155);
   
 	//set window size & show window
-    	gtk_widget_set_size_request(GTK_WIDGET(window),350,240);
+    	gtk_widget_set_size_request(GTK_WIDGET(window),350,260);
 	gtk_widget_show_all(GTK_WIDGET(window));
 	
 	
