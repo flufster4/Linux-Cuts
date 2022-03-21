@@ -24,5 +24,5 @@ clean:
 	sudo update-mime-database /usr/share/mime
 	
 pkg:
-	sudo apt install make
-	sudo apt install libgtk-3-dev
+	sudo apt-get install make
+	sudo apt-get install libgtk-3-dev
