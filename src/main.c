@@ -19,6 +19,7 @@
 // contect button to register - g_signal_connect(button,"clicked",G_CALLBACK(function),NULL);
 
 GtkWidget *k, *path, *name, *texttype, *imagetype, *soundtype;
+int args;
 
 int remove_char(char *s, int pos)
 {
@@ -100,7 +101,8 @@ void makebutton_clicked(GtkWidget *widget,gpointer data) {
 
 		char shortcutpath[5100] = "";
 		strcpy(shortcutpath, gtk_entry_get_text(GTK_ENTRY(name)));
-		strcat(shortcutpath, ".lnk");
+		if (!args == 3) strcat(shortcutpath, ".lnk");
+		if (args == 3) remove(shortcutpath);
 
 		FILE *shortcut = fopen(shortcutpath,"w");
 
@@ -162,22 +164,39 @@ void quitbutton_clicked(GtkWidget *widget,gpointer data) {
 
 int main(int argc, char *argv[])
 {
+
+	args = argc;
+	int makebuttonx = 200;
+
+	gtk_init(&argc, &argv);
+
+	//make feilds
+	path = gtk_entry_new();
+	name = gtk_entry_new();
+
+	//make radio buttons
+	imagetype = gtk_radio_button_new_with_label(NULL,"Image");
+	soundtype = gtk_radio_button_new_with_label_from_widget(GTK_RADIO_BUTTON(imagetype), "Video/Audio");
+	texttype = gtk_radio_button_new_with_label_from_widget(GTK_RADIO_BUTTON(imagetype), "Other");
+
 	gchar *title = "Linux Cuts";
+	gchar *makebuttontext = "Create Shortcut";
 
 	if (argc == 2) {
 		if (fopen(argv[1], "r")) {
+			printf("opening shortcut...\n");
 			FILE *file = fopen(argv[1], "r");
 			char line[5100] = "";
 			char value[5100] = "";
-			char path[5100] = "";
+			char fpath[5100] = "";
 			char type[2] = "";
 
 			while (fgets(line, 5100, file) != NULL) {
 				char substr[5100] = "";
 				if (strcmp(strncpy(substr, &line[0], 5),"path=") == 0) {
-					strncpy(path, &line[strlen(substr)], strlen(line));
+					strncpy(fpath, &line[strlen(substr)], strlen(line));
 					
-					path[strcspn(path, "\n")] = 0;
+					fpath[strcspn(fpath, "\n")] = 0;
 
 				}
 
@@ -189,13 +208,13 @@ int main(int argc, char *argv[])
 				}
 				
 			}
-			printf("path: %s\ntype: %s", path, type);
+			printf("path: %s\ntype: %s", fpath, type);
 
 			if (strcmp(type, "2") == 0) {
 					char cmd[9] = "gedit \"";
-					strcat(cmd, path);
+					strcat(cmd, fpath);
 					strcat(cmd, "\"");
-					printf("path: %s", path);
+					printf("path: %s", fpath);
 					printf("cmd: %s", cmd);
 					system(cmd);
 			}
@@ -203,9 +222,9 @@ int main(int argc, char *argv[])
 
 			if (strcmp(type, "1") == 0) {
 					char cmd[13] = "xdg-open \"";
-					strcat(cmd, path);
+					strcat(cmd, fpath);
 					strcat(cmd, "\"");
-					printf("path: %s", path);
+					printf("path: %s", fpath);
 					printf("cmd: %s", cmd);
 					system(cmd);
 			}
@@ -213,9 +232,9 @@ int main(int argc, char *argv[])
 
 			if (strcmp(type, "0") == 0) {
 					char cmd[9] = "eog \"";
-					strcat(cmd, path);
+					strcat(cmd, fpath);
 					strcat(cmd, "\"");
-					printf("path: %s", path);
+					printf("path: %s", fpath);
 					printf("cmd: %s", cmd);
 					system(cmd);
 			}
@@ -232,13 +251,16 @@ int main(int argc, char *argv[])
 
 		if (fopen(argv[1], "r")) {
 
+			printf("editing shortcut...\n");
+
 			title = "Edit Shortcut";
+			makebuttontext = "Save";
 
 			//open shortcut file and create vars
 			FILE *file = fopen(argv[1], "r");
 			char line[5100] = "";
 			char value[5100] = "";
-			char path[5100] = "";
+			char fpath[5100] = "";
 			char type[2] = "";
 
 			//loop thr file
@@ -247,9 +269,9 @@ int main(int argc, char *argv[])
 				//get path
 				char substr[5100] = "";
 				if (strcmp(strncpy(substr, &line[0], 5),"path=") == 0) {
-					strncpy(path, &line[strlen(substr)], strlen(line));
+					strncpy(fpath, &line[strlen(substr)], strlen(line));
 					
-					path[strcspn(path, "\n")] = 0;
+					fpath[strcspn(fpath, "\n")] = 0;
 
 				}
 
@@ -263,10 +285,16 @@ int main(int argc, char *argv[])
 				
 			}
 
-			printf("path: %s\ntype: %s", path, type);
+			printf("path: %s\ntype: %s\n", fpath, type);
 
-			gtk_entry_set_text(GTK_ENTRY(path), path);
+			gtk_entry_set_text(GTK_ENTRY(path), fpath);
+			gtk_entry_set_text(GTK_ENTRY(name), argv[1]);
 
+			if (strcmp(type, "0") == 0) gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(imagetype), true);
+			if (strcmp(type, "1") == 0) gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(soundtype), true);
+			if (strcmp(type, "2") == 0) gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(texttype), true);
+
+			makebuttonx = 270;
 
 			//close file
 			fclose(file);
@@ -275,7 +303,6 @@ int main(int argc, char *argv[])
 	}
 	
 	//make window
-	gtk_init(&argc, &argv);
 	GtkWidget *window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	gtk_window_set_title(GTK_WINDOW(window), title);
 	g_signal_connect(window, "destroy", G_CALLBACK(destroy), NULL);
@@ -287,12 +314,10 @@ int main(int argc, char *argv[])
     GtkWidget *namelabel, *pathlabel, *openfile, *make, *cancel, *savename, *typelabel;
 
 	namelabel = gtk_label_new("Name:");
-	name = gtk_entry_new();
 	gtk_entry_set_placeholder_text(GTK_ENTRY(name),"shortcut name");
 	
 	//path field
 	pathlabel = gtk_label_new("Path:");
-	path = gtk_entry_new();
 	gtk_entry_set_placeholder_text(GTK_ENTRY(path),"target path");
 	
 	//open file button
@@ -305,15 +330,11 @@ int main(int argc, char *argv[])
 	cancel = gtk_button_new_with_label("Cancel");
 	g_signal_connect(cancel,"clicked",G_CALLBACK(quitbutton_clicked),NULL);
 	
-	make = gtk_button_new_with_label("Create Shortcut");
+	make = gtk_button_new_with_label(makebuttontext);
 	g_signal_connect(make,"clicked",G_CALLBACK(makebutton_clicked),NULL);
 
 	//file type
 	typelabel = gtk_label_new("File type:");
-
-	imagetype = gtk_radio_button_new_with_label(NULL,"Image");
-	soundtype = gtk_radio_button_new_with_label_from_widget(GTK_RADIO_BUTTON(imagetype), "Video/Audio");
-	texttype = gtk_radio_button_new_with_label_from_widget(GTK_RADIO_BUTTON(imagetype), "Other");
     	
     	//add items to GUI
     	additem(namelabel, 25, 33);
@@ -322,7 +343,7 @@ int main(int argc, char *argv[])
     	additem(path, 85, 75);
     	additem(openfile, 275, 75);
     	additem(cancel, 15, 210);
-    	additem(make, 200, 210);
+    	additem(make, makebuttonx, 210);
 		additem(savename, 275, 25);
 		additem(typelabel,25,125);
 		additem(imagetype, 25,155);
