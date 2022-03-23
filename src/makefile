@@ -4,7 +4,7 @@ install:
 	sudo echo "[Desktop Entry]" > /usr/share/applications/lc.desktop
 	sudo echo "Exec=/usr/bin/lc %f" >> /usr/share/applications/lc.desktop
 	sudo echo "TryExec=/usr/bin/lc" >> /usr/share/applications/lc.desktop
-	sudo echo "Name=Linux Cuts Dev" >> /usr/share/applications/lc.desktop
+	sudo echo "Name=Linux Cuts" >> /usr/share/applications/lc.desktop
 	sudo echo "Terminal=false" >> /usr/share/applications/lc.desktop
 	sudo echo "Type=Application" >> /usr/share/applications/lc.desktop
 	sudo echo "MimeType=text/lnk;" >> /usr/share/applications/lc.desktop
@@ -24,5 +24,6 @@ clean:
 	sudo update-mime-database /usr/share/mime
 	
 pkg:
+	sudo apt-get install gcc
 	sudo apt-get install make
 	sudo apt-get install libgtk-3-dev

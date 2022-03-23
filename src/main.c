@@ -101,9 +101,11 @@ void makebutton_clicked(GtkWidget *widget,gpointer data) {
 
 		char shortcutpath[5100] = "";
 		strcpy(shortcutpath, gtk_entry_get_text(GTK_ENTRY(name)));
-		if (!args == 3) strcat(shortcutpath, ".lnk");
-		if (args == 3) remove(shortcutpath);
+		if (args < 3) {strcat(shortcutpath, ".lnk");g_print("yay...\n");}
+		if (args == 3) {remove(shortcutpath);g_print("why...\n");}
 
+		g_print("Shortcut path: %s\nAmount of args: %d\n",shortcutpath,args);
+		
 		FILE *shortcut = fopen(shortcutpath,"w");
 
 		fprintf(shortcut, "[shortcut]\npath=%s\ntype=%d",gtk_entry_get_text(GTK_ENTRY(path)),type);
@@ -165,6 +167,8 @@ void quitbutton_clicked(GtkWidget *widget,gpointer data) {
 int main(int argc, char *argv[])
 {
 
+	g_print("Amount of args: %d\n", argc);
+	
 	args = argc;
 	int makebuttonx = 200;
 
