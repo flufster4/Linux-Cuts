@@ -18,7 +18,7 @@
 // button event registering function - void button_clicked(GtkWidget *widget,gpointer data)
 // contect button to register - g_signal_connect(button,"clicked",G_CALLBACK(function),NULL);
 
-GtkWidget *k, *path, *name, *texttype, *imagetype, *soundtype;
+GtkWidget *k, *path, *name, *texttype, *imagetype, *soundtype, *apptype;
 int args;
 
 int remove_char(char *s, int pos)
@@ -181,6 +181,7 @@ int main(int argc, char *argv[])
 	//make radio buttons
 	imagetype = gtk_radio_button_new_with_label(NULL,"Image");
 	soundtype = gtk_radio_button_new_with_label_from_widget(GTK_RADIO_BUTTON(imagetype), "Video/Audio");
+	apptype = gtk_radio_button_new_with_label_from_widget(GTK_RADIO_BUTTON(imagetype), "Application");
 	texttype = gtk_radio_button_new_with_label_from_widget(GTK_RADIO_BUTTON(imagetype), "Other");
 
 	gchar *title = "Linux Cuts";
@@ -221,6 +222,8 @@ int main(int argc, char *argv[])
 					printf("path: %s", fpath);
 					printf("cmd: %s", cmd);
 					system(cmd);
+					fclose(file);
+					return 0;
 			}
 
 
@@ -231,6 +234,8 @@ int main(int argc, char *argv[])
 					printf("path: %s", fpath);
 					printf("cmd: %s", cmd);
 					system(cmd);
+					fclose(file);
+					return 0;
 			}
 
 
@@ -241,10 +246,32 @@ int main(int argc, char *argv[])
 					printf("path: %s", fpath);
 					printf("cmd: %s", cmd);
 					system(cmd);
+					fclose(file);
+					return 0;
 			}
 
-			fclose(file);
-			return 0;
+			gint action;
+			GtkWidget *dialog;
+			GtkDialogFlags flags = GTK_DIALOG_DESTROY_WITH_PARENT;
+ 			dialog = gtk_message_dialog_new (NULL,
+                                  flags,
+                                  GTK_MESSAGE_ERROR,
+                                  GTK_BUTTONS_OK,
+								  "Ops!\nIt seems like your shortcut file is corupted!\nError: invalid type.");
+
+			gtk_dialog_add_button (
+  				GTK_DIALOG(dialog),
+ 				"delete shortcut",
+  				2
+			);
+
+ 			action = gtk_dialog_run (GTK_DIALOG (dialog));
+ 			gtk_widget_destroy (dialog);
+
+			if (action == 2) {
+				remove(argv[1]);
+			}
+			return 1;
 		}
 		return EXIT_FAILURE;
 	}
@@ -297,6 +324,7 @@ int main(int argc, char *argv[])
 			if (strcmp(type, "0") == 0) gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(imagetype), true);
 			if (strcmp(type, "1") == 0) gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(soundtype), true);
 			if (strcmp(type, "2") == 0) gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(texttype), true);
+			if (strcmp(type, "3") == 0) gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(apptype), true);
 
 			makebuttonx = 270;
 
@@ -338,7 +366,7 @@ int main(int argc, char *argv[])
 	g_signal_connect(make,"clicked",G_CALLBACK(makebutton_clicked),NULL);
 
 	//file type
-	typelabel = gtk_label_new("File type:");
+	typelabel = gtk_label_new("Shortcut Type:");
     	
     	//add items to GUI
     	additem(namelabel, 25, 33);
@@ -346,16 +374,17 @@ int main(int argc, char *argv[])
     	additem(pathlabel, 25, 80);
     	additem(path, 85, 75);
     	additem(openfile, 275, 75);
-    	additem(cancel, 15, 210);
-    	additem(make, makebuttonx, 210);
+    	additem(cancel, 15, 220);
+    	additem(make, makebuttonx, 220);
 		additem(savename, 275, 25);
 		additem(typelabel,25,125);
 		additem(imagetype, 25,155);
 		additem(soundtype, 100, 155);
 		additem(texttype, 215, 155);
+		additem(apptype, 25, 180);
   
 	//set window size & show window
-    	gtk_widget_set_size_request(GTK_WIDGET(window),350,260);
+    	gtk_widget_set_size_request(GTK_WIDGET(window),350,270);
 	gtk_widget_show_all(GTK_WIDGET(window));
 	
 	
